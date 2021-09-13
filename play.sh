@@ -22,7 +22,7 @@ while getopts "p:i:b:o:w:h" opts; do
             OVERLAY="${OPTARG}"
             ;;
         w)
-            WORKDIR="${WORKDIR}"
+            WORKDIR="${OPTARG}"
             ;;
         h)
             usage
@@ -49,6 +49,7 @@ fi
 if [[ ! -e "${WORKDIR}" ]]; then
     mkdir "${WORKDIR}"
 fi
+
 mkdir -p "${OVERLAY}"
 
 tmpdir=$(mktemp -p "${WORKDIR}" -d prjctz.XXX)
