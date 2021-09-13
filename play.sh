@@ -3,7 +3,12 @@
 set -eo pipefail
 
 function usage() {
-    echo "usage:"
+    echo "usage: ${0} -i image"
+    echo "Mount current directory as an overlay and run in container."
+    echo ""
+    echo -e "  -b\tRather than point to image, point to Dockerfile."
+    echo -e "  -o\tChoose location of overlay directory [WORKDIR/overlay]"
+    echo -e "  -w\tChoose location of workdir (where ${0} places temporary files needed for execution) [.prjctz]"
     exit
 }
 
