@@ -47,7 +47,7 @@ while getopts "p:i:b:o:w:hR" opts; do
 done
 
 PROJECT_NAME=${PROJECT_NAME:-"$(basename $(pwd))"}
-WORKDIR=${WORKDIR:-"$(pwd)/.prjctz"}
+WORKDIR=${WORKDIR:-"${HOME}/.prjctz"}
 OVERLAY=${OVERLAY:-"${WORKDIR}/overlay"}
 
 if [[ -z "${IMAGE}" ]]; then
@@ -65,10 +65,10 @@ fi
 
 mkdir -p "${OVERLAY}"
 
-tmpdir=$(mktemp -p "${WORKDIR}" -d prjctz.XXX)
-mkdir "${tmpdir}/work" "${tmpdir}/merged"
-
 if [[ "${RAW}" == "0" ]]; then
+    tmpdir=$(mktemp -p "${WORKDIR}" -d prjctz.XXX)
+    mkdir "${tmpdir}/work" "${tmpdir}/merged"
+
     trap cleanup EXIT
     sudo mount -t overlay overlay -olowerdir="$(pwd)",upperdir="${OVERLAY}",workdir="${tmpdir}/work" "${tmpdir}/merged/"
     disk="${tmpdir}/merged"
