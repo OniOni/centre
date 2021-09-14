@@ -17,7 +17,7 @@ function cleanup() {
     rm -rf "${tmpdir}"
 }
 
-while getopts "p:i:b:o:w:h" opts; do
+while getopts "p:i:b:o:w:hR" opts; do
     case $opts in
         p)
             PROJECT_NAME="${OPTARG}"
@@ -33,6 +33,9 @@ while getopts "p:i:b:o:w:h" opts; do
             ;;
         w)
             WORKDIR="${OPTARG}"
+            ;;
+        R)
+            RAW=1
             ;;
         h)
             usage
@@ -65,10 +68,12 @@ mkdir -p "${OVERLAY}"
 tmpdir=$(mktemp -p "${WORKDIR}" -d prjctz.XXX)
 mkdir "${tmpdir}/work" "${tmpdir}/merged"
 
-trap cleanup EXIT
-sudo mount -t overlay overlay -olowerdir="$(pwd)",upperdir="${OVERLAY}",workdir="${tmpdir}/work" "${tmpdir}/merged/"
+if [[ "${RAW}" == "0" ]]; then
+    trap cleanup EXIT
+    sudo mount -t overlay overlay -olowerdir="$(pwd)",upperdir="${OVERLAY}",workdir="${tmpdir}/work" "${tmpdir}/merged/"
+    disk="${tmpdir}/merged"
+else
+    disk="$(pwd)"
+fi
 
-sudo docker run -v "${tmpdir}/merged":"/${PROJECT_NAME}" -w "/${PROJECT_NAME}" --rm -it "${IMAGE}" /bin/bash
-
-sudo umount "${tmpdir}/merged"
-rm -rf "${tmpdir}"
+sudo docker run -v "${disk}":"/${PROJECT_NAME}" -w "/${PROJECT_NAME}" --rm -it "${IMAGE}" /bin/bash
