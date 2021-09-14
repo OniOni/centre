@@ -1,15 +1,21 @@
-#!/bin/bash
+#!/bin/bash                                                                                                                                                                                                 
 
-set -eo pipefail
+set -exo pipefail
+
+DEFAULT_PROJECT_NAME="$(basename $(pwd))"
+DEFAULT_BASEDIR="${HOME}/.prjctz"
 
 function usage() {
     echo "usage: ${0} -i image"
     echo "Mount current directory as an overlay and run in container."
     echo ""
     echo -e "  -b\tRather than point to image, point to Dockerfile."
-    echo -e "  -o\tChoose location of overlay directory [WORKDIR/overlay]."
-    echo -e "  -w\tChoose location of workdir (where ${0} places temporary files needed for execution) [~/.prjctz]."
+    echo -e "  -p\tProject name [${DEFAULT_PROJECT_NAME}]."
     echo -e "  -R\tMount current directory directly without overlay."
+
+    echo -e "\n\nADVANCED\n"
+    echo -e "  -w\tChoose location of workdir (where ${0} places temporary files needed for execution) [${DEFAULT_BASEDIR}/\$PROJECT_NAME]."
+    echo -e "  -o\tChoose location of overlay directory [\$WORKDIR/overlay]."
     exit
 }
 
@@ -47,9 +53,10 @@ while getopts "p:i:b:o:w:hR" opts; do
     esac
 done
 
-PROJECT_NAME=${PROJECT_NAME:-"$(basename $(pwd))"}
-WORKDIR=${WORKDIR:-"${HOME}/.prjctz"}
+PROJECT_NAME=${PROJECT_NAME:-"${DEFAULT_PROJECT_NAME}"}
+WORKDIR=${WORKDIR:-"${DEFAULT_BASEDIR}/${PROJECT_NAME}"}
 OVERLAY=${OVERLAY:-"${WORKDIR}/overlay"}
+RAW=${RAW:-0}
 
 if [[ -z "${IMAGE}" ]]; then
     if [[ -n "${BUILD_FILE}" ]]; then
@@ -61,7 +68,7 @@ if [[ -z "${IMAGE}" ]]; then
 fi
 
 if [[ ! -e "${WORKDIR}" ]]; then
-    mkdir "${WORKDIR}"
+    mkdir -p "${WORKDIR}"
 fi
 
 mkdir -p "${OVERLAY}"
