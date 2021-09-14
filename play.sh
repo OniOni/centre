@@ -12,6 +12,11 @@ function usage() {
     exit
 }
 
+function cleanup() {
+    sudo umount "${tmpdir}/merged"
+    rm -rf "${tmpdir}"
+}
+
 while getopts "p:i:b:o:w:h" opts; do
     case $opts in
         p)
@@ -60,6 +65,7 @@ mkdir -p "${OVERLAY}"
 tmpdir=$(mktemp -p "${WORKDIR}" -d prjctz.XXX)
 mkdir "${tmpdir}/work" "${tmpdir}/merged"
 
+trap cleanup EXIT
 sudo mount -t overlay overlay -olowerdir="$(pwd)",upperdir="${OVERLAY}",workdir="${tmpdir}/work" "${tmpdir}/merged/"
 
 podman run -v "${tmpdir}/merged":"/$(dirname $(pwd))" -w "/$(dirname $(pwd))" --rm -it "${IMAGE}" /bin/bash
