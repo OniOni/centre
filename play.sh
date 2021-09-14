@@ -44,7 +44,7 @@ while getopts "p:i:b:o:w:h" opts; do
 done
 
 PROJECT_NAME=${PROJECT_NAME:-"$(basename $(pwd))"}
-WORKDIR=${WORKDIR:-".prjctz"}
+WORKDIR=${WORKDIR:-"$(pwd)/.prjctz"}
 OVERLAY=${OVERLAY:-"${WORKDIR}/overlay"}
 
 if [[ -z "${IMAGE}" ]]; then
@@ -68,7 +68,7 @@ mkdir "${tmpdir}/work" "${tmpdir}/merged"
 trap cleanup EXIT
 sudo mount -t overlay overlay -olowerdir="$(pwd)",upperdir="${OVERLAY}",workdir="${tmpdir}/work" "${tmpdir}/merged/"
 
-podman run -v "${tmpdir}/merged":"/$(dirname $(pwd))" -w "/$(dirname $(pwd))" --rm -it "${IMAGE}" /bin/bash
+sudo docker run -v "${tmpdir}/merged":"/${PROJECT_NAME}" -w "/${PROJECT_NAME}" --rm -it "${IMAGE}" /bin/bash
 
 sudo umount "${tmpdir}/merged"
 rm -rf "${tmpdir}"
