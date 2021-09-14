@@ -7,8 +7,9 @@ function usage() {
     echo "Mount current directory as an overlay and run in container."
     echo ""
     echo -e "  -b\tRather than point to image, point to Dockerfile."
-    echo -e "  -o\tChoose location of overlay directory [WORKDIR/overlay]"
-    echo -e "  -w\tChoose location of workdir (where ${0} places temporary files needed for execution) [.prjctz]"
+    echo -e "  -o\tChoose location of overlay directory [WORKDIR/overlay]."
+    echo -e "  -w\tChoose location of workdir (where ${0} places temporary files needed for execution) [~/.prjctz]."
+    echo -e "  -R\tMount current directory directly without overlay."
     exit
 }
 
@@ -52,7 +53,7 @@ OVERLAY=${OVERLAY:-"${WORKDIR}/overlay"}
 
 if [[ -z "${IMAGE}" ]]; then
     if [[ -n "${BUILD_FILE}" ]]; then
-        podman build -f "${BUILD_FILE}" -t "${PROJECT_NAME}_devbox"
+        sudo docker build -f "${BUILD_FILE}" -t "${PROJECT_NAME}_devbox" .
         IMAGE="${PROJECT_NAME}_devbox"
     else
         usage
