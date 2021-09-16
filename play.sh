@@ -24,7 +24,6 @@ function cleanup() {
     rm -rf "${tmpdir}"
 }
 
-
 while getopts "p:i:b:o:w:hR" opts; do
     case $opts in
         p)
