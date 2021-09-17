@@ -1,21 +1,21 @@
-#!/bin/bash                                                                                                                                                                                                 
+#!/bin/bash
 
-set -exo pipefail
+set -eo pipefail
 
 DEFAULT_PROJECT_NAME="$(basename $(pwd))"
 DEFAULT_BASEDIR="${HOME}/.prjctz"
 
 function usage() {
-    echo "usage: ${0} -i image"
+    echo "Usage: ${0} [options] image [--]"
     echo "Mount current directory as an overlay and run in container."
     echo ""
     echo -e "  -b\tRather than point to image, point to Dockerfile."
     echo -e "  -p\tProject name [${DEFAULT_PROJECT_NAME}]."
     echo -e "  -R\tMount current directory directly without overlay."
 
-    echo -e "\n\nADVANCED\n"
-    echo -e "  -w\tChoose location of workdir (where ${0} places temporary files needed for execution) [${DEFAULT_BASEDIR}/\$PROJECT_NAME]."
-    echo -e "  -o\tChoose location of overlay directory [\$WORKDIR/overlay]."
+    echo -e "\n\nENVIRONMENTAL VARIABLES\n"
+    echo -e "  WORKDIR\tChoose location of workdir (where ${0} places temporary files needed for execution) [${DEFAULT_BASEDIR}/\$PROJECT_NAME]."
+    echo -e "  OVERLAY\tChoose location of overlay directory [\$WORKDIR/overlay]."
     exit
 }
 
@@ -24,39 +24,48 @@ function cleanup() {
     rm -rf "${tmpdir}"
 }
 
-while getopts "p:i:b:o:w:hR" opts; do
-    case $opts in
-        p)
-            PROJECT_NAME="${OPTARG}"
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
+    case $1 in
+        -p)
+            shift
+            PROJECT_NAME="${1}"
             ;;
-        i)
-            IMAGE="${OPTARG}"
+        -b)
+            shift
+            BUILD_FILE="${1}"
             ;;
-        b)
-            BUILD_FILE="${OPTARG}"
-            ;;
-        o)
-            OVERLAY="${OPTARG}"
-            ;;
-        w)
-            WORKDIR="${OPTARG}"
-            ;;
-        R)
+        -R)
             RAW=1
             ;;
-        h)
+        -H)
+            MOUNT_HOME=1
+            ;;
+        -h)
             usage
             ;;
         *)
             usage
             ;;
     esac
+    shift
 done
 
 PROJECT_NAME=${PROJECT_NAME:-"${DEFAULT_PROJECT_NAME}"}
 WORKDIR=${WORKDIR:-"${DEFAULT_BASEDIR}/${PROJECT_NAME}"}
 OVERLAY=${OVERLAY:-"${WORKDIR}/overlay"}
 RAW=${RAW:-0}
+
+if [[ -n "$1" ]]; then
+    IMAGE="$1"
+else
+    usage
+fi
+
+shift
+if [[ "$1" == "--" ]]; then
+    shift
+    ARGS="${*}"
+fi
 
 if [[ -z "${IMAGE}" ]]; then
     if [[ -n "${BUILD_FILE}" ]]; then
@@ -84,4 +93,10 @@ else
     disk="$(pwd)"
 fi
 
-sudo docker run -v "${disk}":"/${PROJECT_NAME}" -w "/${PROJECT_NAME}" --rm -it "${IMAGE}" /bin/bash
+MOUNTS=""
+if [[ "${MOUNT_HOME}" -eq 1 ]]; then
+    MOUNTS+=("--mount type=bind,src=${HOME},dst=/root,ro")
+fi
+
+sudo docker run -v "${disk}":"/${PROJECT_NAME}" -w "/${PROJECT_NAME}" \
+     --rm -it ${MOUNTS[@]} ${ARGS[@]} "${IMAGE}" /bin/bash
